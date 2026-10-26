@@ -1,0 +1,20 @@
+{
+  "name": "best-framework",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "best-framework": "./src/index.ts",
+    "scaff": "./src/index.ts"
+  },
+  "scripts": {
+    "scaff": "bun run src/index.ts",
+    "start": "bun run src/index.ts",
+    "test": "bun test src/best-framework.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "latest"
+  }
+}
