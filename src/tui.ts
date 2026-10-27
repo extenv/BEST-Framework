@@ -29,7 +29,7 @@ export async function printAnimatedBanner(): Promise<void> {
   const lines = [
     "",
     `  ${ui.brightCyan("╭──────────────────────────────────────────────────────────────╮")}`,
-    `  ${ui.brightCyan("│")}  ${ui.bgCyan("BEST-FRAMEWORK")}  ${ui.bold(ui.white("Enterprise Monorepo & AI Skills Engine"))}    ${ui.brightCyan("│")}`,
+    `  ${ui.brightCyan("│")}  ${ui.bgCyan("BEST-STACK")}      ${ui.bold(ui.white("Enterprise Monorepo & AI Skills Engine"))}    ${ui.brightCyan("│")}`,
     `  ${ui.brightCyan("│")}  ${ui.gray("Bun · Turborepo · Elysia · Eden v2 · Better Auth · SolidJS")}  ${ui.brightCyan("│")}`,
     `  ${ui.brightCyan("╰──────────────────────────────────────────────────────────────╯")}`,
     "",

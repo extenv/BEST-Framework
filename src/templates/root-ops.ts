@@ -1,7 +1,7 @@
 import type { TemplateFile } from "../types";
 
 const ENV_EXAMPLE_CONTENT = `# ============================================================================
-# BEST Framework (Bun · Elysia · Solid · Turbo) — Environment Configuration
+# BEST Stack (Bun · Elysia · Solid · Turbo) — Environment Configuration
 # Copy this file to .env before running in custom environments.
 # ============================================================================
 
@@ -225,7 +225,7 @@ if (commitMsgFile) {
     },
     {
       path: "CLAUDE.md",
-      content: `# <project-slug> — BEST Framework Operating Manual
+      content: `# <project-slug> — BEST Stack Operating Manual
 
 ## Stack: BEST (Bun · Elysia · Solid · Turbo)
 1. **Strict File Size Cap:** Max 300 lines per source file.
@@ -243,7 +243,7 @@ if (commitMsgFile) {
       path: "README.md",
       content: `# <project-slug>
 
-Built with **BEST Framework** (**B**un · **E**lysia · **S**olid · **T**urbo) — Type-Safe Modular Monolith with Better Auth, Eden Treaty v2, Drizzle ORM, and Tailwind CSS v4.
+Built with **BEST Stack** (**B**un · **E**lysia · **S**olid · **T**urbo) — Type-Safe Modular Monolith with Better Auth, Eden Treaty v2, Drizzle ORM, and Tailwind CSS v4.
 
 ## Quick Start
 

@@ -1,25 +1,28 @@
-# BEST Framework (`best-framework`)
+# BEST Stack
 
-> **B**un · **E**lysia · **S**olid · **T**urbo — Enterprise Type-Safe Modular Monorepo & AI Agent Skills Scaffolder
+> **B**un · **E**lysia · **S**olid · **T**urbo — Enterprise Type-Safe Modular Monorepo &amp; AI Agent Skills Scaffolder
 
-**BEST Framework** generates a production-ready, end-to-end type-safe monorepo and installs **53 curated AI Agent Skills** across 9 SDLC roles in a single command: `bun run scaff`.
+**BEST Stack** generates a production-ready, end-to-end type-safe monorepo and installs **53 curated AI Agent Skills** across 9 SDLC roles in a single command: `bun run best`.
 
 ---
 
 ## 1. Overview: What is the BEST Stack?
 
-| Pillar | Technology | Why It Belongs in BEST |
-|---|---|---|
-| **B — Bun** | `Bun v1.4+` | Native TypeScript execution, instant workspace linking, and sub-second `bun:test` runner. |
-| **E — Elysia** | `Elysia.js` + `Eden Treaty v2` | High-throughput Bun HTTP server paired with `treaty<App>()` for zero-codegen end-to-end type safety. |
-| **S — Solid** | `SolidJS` + `TanStack Router/Query` | Fine-grained reactivity without Virtual DOM overhead, styled with **Tailwind CSS v4** (`@theme`). |
-| **T — Turbo** | `Turborepo` | Parallel workspace execution, interactive dev TUI, and content-hashed caching (`build`, `typecheck`, `test`). |
+
+| Pillar         | Technology                          | Why It Belongs in BEST                                                                                        |
+| -------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **B — Bun**    | `Bun latest`                        | Native TypeScript execution, instant workspace linking, and sub-second `bun:test` runner.                     |
+| **E — Elysia** | `Elysia.js` + `Eden Treaty v2`      | High-throughput Bun HTTP server paired with `treaty<App>()` for zero-codegen end-to-end type safety.          |
+| **S — Solid**  | `SolidJS` + `TanStack Router/Query` | Fine-grained reactivity without Virtual DOM overhead, styled with **Tailwind CSS v4** (`@theme`).             |
+| **T — Turbo**  | `Turborepo`                         | Parallel workspace execution, interactive dev TUI, and content-hashed caching (`build`, `typecheck`, `test`). |
+
 
 ### Core Capabilities Included Out of the Box
+
 - **Authentication (`Better Auth` + `Drizzle`):** Pre-wired `/login` and `/register` pages with session cookies, `authGuard` middleware, and `requireAuth` / `requireRole` macros.
 - **Database (`PostgreSQL` + `Drizzle ORM`):** Typed SQL schemas (`user`, `session`, `account`, `verification`, `todos`), programmatic migrator, and idempotent seed script.
 - **Shared Contracts (`@<scope>/shared`):** Isomorphic `@sinclair/typebox` DTO schemas and static TypeScript types shared between backend and frontend.
-- **Zero-Warning Dev Server:** Configured so `turbo run dev` watches `apps/api`, `packages/db`, and `packages/shared` from the monorepo root with zero file-watcher or logger warnings.
+
 - **53 AI Agent Skills (`.agents/skills/`):** Built-in SDLC skill catalog covering **BA, PM, UI/UX, Tech Lead, Backend, Frontend, QA, Infra/DevOps, and Token Optimization**.
 
 ```mermaid
@@ -62,10 +65,11 @@ flowchart LR
 Run the interactive terminal wizard with animated progress spinners and role presets:
 
 ```bash
-bun run scaff
+bun run best
 ```
 
 During the interactive setup, you will select:
+
 1. **Project Identifier** (e.g., `my-saas`)
 2. **Workspace Package Scope** (e.g., `@my-saas`)
 3. **Output Directory** (e.g., `./my-saas`)
@@ -76,25 +80,27 @@ During the interactive setup, you will select:
 
 ```bash
 # Generate with defaults and install dependencies
-bun run scaff my-app --scope myorg -y
+bun run best my-app --scope myorg -y
 
 # Fast offline scaffold (writes all 53 SKILL.md files locally without network calls)
-bun run scaff my-app --scope myorg --offline-skills --no-install -y
+bun run best my-app --scope myorg --offline-skills --no-install -y
 ```
 
 ### CLI Options
 
-| Flag | Description | Default |
-|---|---|---|
-| `-n, --name <slug>` | Project directory and root package name | `best-framework` |
-| `-s, --scope <scope>` | Workspace scope without `@` (`@<scope>/api`, `@<scope>/web`, etc.) | `<project-slug>` |
-| `-o, --out <dir>` | Target output path | `./<project-slug>` |
-| `-r, --roles <list>` | Skill preset (`all`, `engineering`, `product`) or comma list (`be,fe,tech-lead`) | `all` |
-| `--offline-skills` | Write all 53 `SKILL.md` files locally without calling `npx skills add` | `false` |
-| `--no-skills` | Skip creating `.agents/skills/` | `false` |
-| `--no-install` | Skip running `bun install` inside the generated project | `false` |
-| `-y, --yes` | Run non-interactively using defaults | `false` |
-| `-h, --help` | Display CLI help | — |
+
+| Flag                  | Description                                                                      | Default            |
+| --------------------- | -------------------------------------------------------------------------------- | ------------------ |
+| `-n, --name <slug>`   | Project directory and root package name                                          | `best-stack`       |
+| `-s, --scope <scope>` | Workspace scope without `@` (`@<scope>/api`, `@<scope>/web`, etc.)               | `<project-slug>`   |
+| `-o, --out <dir>`     | Target output path                                                               | `./<project-slug>` |
+| `-r, --roles <list>`  | Skill preset (`all`, `engineering`, `product`) or comma list (`be,fe,tech-lead`) | `all`              |
+| `--offline-skills`    | Write all 53 `SKILL.md` files locally without calling `npx skills add`           | `false`            |
+| `--no-skills`         | Skip creating `.agents/skills/`                                                  | `false`            |
+| `--no-install`        | Skip running `bun install` inside the generated project                          | `false`            |
+| `-y, --yes`           | Run non-interactively using defaults                                             | `false`            |
+| `-h, --help`          | Display CLI help                                                                 | —                  |
+
 
 ---
 
@@ -181,17 +187,19 @@ bun run dev
 
 ### Root Scripts in Generated Project
 
-| Command | Description |
-|---|---|
-| `bun run dev` | Start `@<scope>/api` (3001) and `@<scope>/web` (3000) concurrently via Turborepo |
-| `bun run dev:api` | Start only the Elysia backend server with hot-reload |
-| `bun run dev:web` | Start only the SolidJS Vite dev server |
-| `bun run db:generate` | Generate Drizzle SQL migration files from `packages/db/src/schema/` |
-| `bun run db:migrate` | Apply pending SQL migrations to PostgreSQL |
-| `bun run db:seed` | Seed local database with demo records |
-| `bun run check:fast` | Run `typecheck` + `lint` + `test` across all workspaces |
-| `bun run complete-check` | Full quality gate: `typecheck` + `lint` + `format:check` + `test` + `build` |
-| `bun run docker:up` | Build and start unified production container + PostgreSQL |
+
+| Command                  | Description                                                                      |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| `bun run dev`            | Start `@<scope>/api` (3001) and `@<scope>/web` (3000) concurrently via Turborepo |
+| `bun run dev:api`        | Start only the Elysia backend server with hot-reload                             |
+| `bun run dev:web`        | Start only the SolidJS Vite dev server                                           |
+| `bun run db:generate`    | Generate Drizzle SQL migration files from `packages/db/src/schema/`              |
+| `bun run db:migrate`     | Apply pending SQL migrations to PostgreSQL                                       |
+| `bun run db:seed`        | Seed local database with demo records                                            |
+| `bun run check:fast`     | Run `typecheck` + `lint` + `test` across all workspaces                          |
+| `bun run complete-check` | Full quality gate: `typecheck` + `lint` + `format:check` + `test` + `build`      |
+| `bun run docker:up`      | Build and start unified production container + PostgreSQL                        |
+
 
 ---
 
@@ -219,4 +227,4 @@ E2E_BASE_URL=http://localhost:3000
 
 ## 6. Documentation
 
-- **[Package Usage & Architecture Guide (`docs/GUIDE.md`)](file:///C:/Users/admin/Storage/Programming/PROJECTS/scaffolding/docs/GUIDE.md):** Step-by-step instructions for adding DTOs in `@<scope>/shared`, tables in `@<scope>/db`, protected routes in `@<scope>/api`, and reactive pages in `@<scope>/web`.
+- [**Package Usage &amp; Architecture Guide (`docs/GUIDE.md`)](file:///C:/Users/admin/Storage/Programming/PROJECTS/scaffolding/docs/GUIDE.md):** Step-by-step instructions for adding DTOs in `@<scope>/shared`, tables in `@<scope>/db`, protected routes in `@<scope>/api`, and reactive pages in `@<scope>/web`.

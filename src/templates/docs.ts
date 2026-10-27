@@ -4,7 +4,7 @@ export function getDocsTemplates(): TemplateFile[] {
   return [
     {
       path: "docs/GUIDE.md",
-      content: `# <project-slug> — BEST Framework Package & Architecture Guide
+      content: `# <project-slug> — BEST Stack Package & Architecture Guide
 
 > **BEST Stack:** **B**un · **E**lysia · **S**olid · **T**urbo
 

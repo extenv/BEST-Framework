@@ -30,9 +30,9 @@ export function parseCliArgs(argv: string[]): ParsedCliArgs {
     } else if (arg === "-y" || arg === "--yes") {
       result.yes = true;
     } else if (arg === "--name" || arg === "-n") {
-      result.projectSlug = sanitizeSlug(argv[++i] ?? "best-framework");
+      result.projectSlug = sanitizeSlug(argv[++i] ?? "best-stack");
     } else if (arg === "--scope" || arg === "-s") {
-      result.scope = sanitizeScope(argv[++i] ?? "best-framework");
+      result.scope = sanitizeScope(argv[++i] ?? "best-stack");
     } else if (arg === "--out" || arg === "--dir" || arg === "-o") {
       result.targetDir = argv[++i];
     } else if (arg === "--roles" || arg === "-r") {
@@ -62,7 +62,7 @@ export function sanitizeSlug(input: string): string {
     .replace(/[^a-z0-9-_]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
-  return cleaned || "best-framework";
+  return cleaned || "best-stack";
 }
 
 export function sanitizeScope(input: string): string {
@@ -100,7 +100,7 @@ export async function resolveConfig(argv: string[], cwd: string): Promise<Scaffo
   const isInteractive = Boolean(process.stdin.isTTY) && !parsed.yes;
 
   if (!isInteractive) {
-    const projectSlug = parsed.projectSlug ?? "best-framework";
+    const projectSlug = parsed.projectSlug ?? "best-stack";
     const scope = parsed.scope ?? projectSlug;
     const targetDir = path.resolve(cwd, parsed.targetDir ?? projectSlug);
     return {
@@ -119,7 +119,7 @@ export async function resolveConfig(argv: string[], cwd: string): Promise<Scaffo
   const rl = createInterface({ input: process.stdin, output: process.stdout });
 
   try {
-    const defaultSlug = parsed.projectSlug ?? "best-framework";
+    const defaultSlug = parsed.projectSlug ?? "best-stack";
     const slugAns = await rl.question(formatStepPrompt(1, 5, "Project Identifier", defaultSlug));
     const projectSlug = sanitizeSlug(slugAns || defaultSlug);
     printStepDone("Project", projectSlug);
@@ -184,13 +184,13 @@ export async function resolveConfig(argv: string[], cwd: string): Promise<Scaffo
 
 export function printHelp(): void {
   console.log(`
-${ui.bold(ui.brightCyan("BEST-FRAMEWORK"))} — Modular Monorepo & AI Skills Scaffolder
+${ui.bold(ui.brightCyan("BEST-STACK"))} — Modular Monorepo & AI Skills Scaffolder
 
 ${ui.bold("Usage:")}
-  bun run scaff [project-slug] [options]
+  bun run best [project-slug] [options]
 
 ${ui.bold("Options:")}
-  -n, --name <slug>            Project slug (default: "best-framework")
+  -n, --name <slug>            Project slug (default: "best-stack")
   -s, --scope <scope>          Workspace scope without '@' (default: project slug)
   -o, --out <dir>              Target output directory (default: "./<project-slug>")
   -r, --roles <list>           Skill preset ("all", "engineering", "product") or comma list

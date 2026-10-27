@@ -1,4 +1,4 @@
-# BEST Framework — Package Usage & Architecture Guide
+# BEST Stack — Package Usage & Architecture Guide
 
 > **BEST Stack:** **B**un · **E**lysia · **S**olid · **T**urbo
 
@@ -6,7 +6,7 @@
 
 ## 1. Overview
 
-**BEST Framework (`best-framework`)** is a one-command monorepo scaffolder and AI Agent Skills installer (`bun run scaff`) that generates a production-grade **Type-Safe Modular Monolith** powered by:
+**BEST Stack (`best-stack`)** is a one-command monorepo scaffolder and AI Agent Skills installer (`bun run best`) that generates a production-grade **Type-Safe Modular Monolith** powered by:
 
 | Acronym | Technology | Responsibility |
 |---|---|---|
@@ -26,7 +26,7 @@ Integrated core infrastructure:
 
 ## 2. Generated Project Folder Structure
 
-When you run `bun run scaff <project-slug> --scope <scope>`, the following workspace structure is generated:
+When you run `bun run best <project-slug> --scope <scope>`, the following workspace structure is generated:
 
 ```text
 <project-slug>/

@@ -8,7 +8,7 @@ import { generateProject } from "./generator";
 import { SKILL_CATALOG } from "./skills/catalog";
 import { ALL_ROLES } from "./types";
 
-const tempRoot = path.join(os.tmpdir(), `best-framework-test-${Date.now()}`);
+const tempRoot = path.join(os.tmpdir(), `best-stack-test-${Date.now()}`);
 
 afterAll(async () => {
   if (existsSync(tempRoot)) {
@@ -16,10 +16,10 @@ afterAll(async () => {
   }
 });
 
-describe("best-framework CLI parser & project generator", () => {
+describe("best-stack CLI parser & project generator", () => {
   it("sanitizes project slug, workspace scope, and preset role numbers", () => {
     expect(sanitizeSlug("My Cool Project!!")).toBe("my-cool-project");
-    expect(sanitizeSlug("")).toBe("best-framework");
+    expect(sanitizeSlug("")).toBe("best-stack");
     expect(sanitizeScope("@Acme_Corp")).toBe("acme_corp");
     expect(parseRolesInput("2")).toEqual(["tech-lead", "be", "fe", "qa", "general"]);
     expect(parseRolesInput("3")).toEqual(["ba", "pm", "uiux", "general"]);
@@ -28,17 +28,17 @@ describe("best-framework CLI parser & project generator", () => {
 
   it("parses CLI flags accurately", () => {
     const parsed = parseCliArgs([
-      "best-framework",
+      "best-stack",
       "--scope",
-      "@bf",
+      "@bs",
       "--roles",
       "be,fe,general",
       "--offline-skills",
       "--no-install",
       "-y",
     ]);
-    expect(parsed.projectSlug).toBe("best-framework");
-    expect(parsed.scope).toBe("bf");
+    expect(parsed.projectSlug).toBe("best-stack");
+    expect(parsed.scope).toBe("bs");
     expect(parsed.roles).toEqual(["be", "fe", "general"]);
     expect(parsed.fetchExternalSkills).toBe(false);
     expect(parsed.installDeps).toBe(false);
@@ -46,10 +46,10 @@ describe("best-framework CLI parser & project generator", () => {
   });
 
   it("generates full BEST monorepo with valid turbo.json, initial migrations, and auto-detected DB port", async () => {
-    const targetDir = path.join(tempRoot, "best-framework-demo");
+    const targetDir = path.join(tempRoot, "best-stack-demo");
     const result = await generateProject({
-      projectSlug: "best-framework-demo",
-      scope: "bf",
+      projectSlug: "best-stack-demo",
+      scope: "bs",
       targetDir,
       roles: ALL_ROLES.map((r) => r.id),
       installSkills: true,
