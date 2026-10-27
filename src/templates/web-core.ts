@@ -1,6 +1,6 @@
 import type { TemplateFile } from "../types";
 
-export function getWebCoreTemplates(): TemplateFile[] {
+export function getWebCoreTemplates(includeTodos = true): TemplateFile[] {
   return [
     {
       path: "apps/web/package.json",
@@ -114,11 +114,7 @@ export default defineConfig({
 import type { App } from "../../../api/src/index";
 
 export const API_BASE_URL =
-  typeof window !== "undefined"
-    ? window.location.origin.includes("3000")
-      ? "http://localhost:3001"
-      : window.location.origin
-    : "http://localhost:3001";
+  typeof window !== "undefined" ? window.location.origin : "http://localhost:3001";
 
 export const api = treaty<App>(API_BASE_URL, {
   fetch: {
@@ -223,10 +219,14 @@ export function Navbar() {
           <div class="flex items-center gap-4 text-sm text-slate-500">
             <Link to="/" class="transition hover:text-slate-900" activeProps={{ class: "text-slate-900 font-medium" }}>
               Overview
-            </Link>
+            </Link>${
+              includeTodos
+                ? `
             <Link to="/todos" class="transition hover:text-slate-900" activeProps={{ class: "text-slate-900 font-medium" }}>
               Tasks
-            </Link>
+            </Link>`
+                : ""
+            }
           </div>
         </div>
 

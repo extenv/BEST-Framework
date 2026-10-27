@@ -20,9 +20,11 @@
 ### Core Capabilities Included Out of the Box
 
 - **Authentication (`Better Auth` + `Drizzle`):** Pre-wired `/login` and `/register` pages with session cookies, `authGuard` middleware, and `requireAuth` / `requireRole` macros.
-- **Database (`PostgreSQL` + `Drizzle ORM`):** Typed SQL schemas (`user`, `session`, `account`, `verification`, `todos`), programmatic migrator, and idempotent seed script.
+- **Interactive OpenAPI / Scalar Docs (`@elysiajs/swagger`):** Auto-generated API documentation at `http://localhost:3001/docs` powered directly by shared TypeBox schemas.
+- **Observability & Security (`securityPlugin` + `logger`):** Structured JSON/dev logger, `x-request-id` correlation headers, HTTP security headers, and sliding-window rate limiting on `/api/auth/*` and `/api/*`.
+- **Database (`PostgreSQL` + `Drizzle ORM`):** Typed SQL schemas (`user`, `session`, `account`, `verification`, `todos`), `0000_init.sql` + `0000_snapshot.json` metadata for incremental `db:generate`, and auto-migration on server boot.
 - **Shared Contracts (`@<scope>/shared`):** Isomorphic `@sinclair/typebox` DTO schemas and static TypeScript types shared between backend and frontend.
-
+- **CI/CD Quality Gate (`.github/workflows/ci.yml`):** Ready-to-run GitHub Actions pipeline with PostgreSQL 17 service container and `bun run complete-check`.
 - **53 AI Agent Skills (`.agents/skills/`):** Built-in SDLC skill catalog covering **BA, PM, UI/UX, Tech Lead, Backend, Frontend, QA, Infra/DevOps, and Token Optimization**.
 
 ```mermaid
@@ -73,8 +75,9 @@ During the interactive setup, you will select:
 1. **Project Identifier** (e.g., `my-saas`)
 2. **Workspace Package Scope** (e.g., `@my-saas`)
 3. **Output Directory** (e.g., `./my-saas`)
-4. **AI Agent Skill Suite** (`Full-Stack Enterprise`, `Core Engineering`, `Product & Design`, or `Custom Roles`)
-5. **Installation Mode** (`Complete Setup`, `Fast Local Setup`, or `Scaffold Only`)
+4. **Include Sample Todos Module** (`y` to include full-stack CRUD slice, `n` for clean Auth-only boilerplate)
+5. **AI Agent Skill Suite** (`Full-Stack Enterprise`, `Core Engineering`, `Product & Design`, or `Custom Roles`)
+6. **Installation Mode** (`Complete Setup`, `Fast Local Setup`, or `Scaffold Only`)
 
 ### Non-Interactive One-Liner (CLI Flags)
 
@@ -95,6 +98,7 @@ bun run best my-app --scope myorg --offline-skills --no-install -y
 | `-s, --scope <scope>` | Workspace scope without `@` (`@<scope>/api`, `@<scope>/web`, etc.)               | `<project-slug>`   |
 | `-o, --out <dir>`     | Target output path                                                               | `./<project-slug>` |
 | `-r, --roles <list>`  | Skill preset (`all`, `engineering`, `product`) or comma list (`be,fe,tech-lead`) | `all`              |
+| `--no-todos`          | Skip generating sample `todos` module (DTO, DB schema, API routes, and UI page)  | `false`            |
 | `--offline-skills`    | Write all 53 `SKILL.md` files locally without calling `npx skills add`           | `false`            |
 | `--no-skills`         | Skip creating `.agents/skills/`                                                  | `false`            |
 | `--no-install`        | Skip running `bun install` inside the generated project                          | `false`            |
@@ -195,6 +199,8 @@ bun run dev
 | `bun run dev:web`        | Start only the SolidJS Vite dev server                                           |
 | `bun run db:generate`    | Generate Drizzle SQL migration files from `packages/db/src/schema/`              |
 | `bun run db:migrate`     | Apply pending SQL migrations to PostgreSQL                                       |
+| `bun run db:push`        | Push Drizzle schema directly to PostgreSQL for rapid prototyping                 |
+| `bun run db:studio`      | Launch Drizzle Studio GUI to browse and edit PostgreSQL tables                   |
 | `bun run db:seed`        | Seed local database with demo records                                            |
 | `bun run check:fast`     | Run `typecheck` + `lint` + `test` across all workspaces                          |
 | `bun run complete-check` | Full quality gate: `typecheck` + `lint` + `format:check` + `test` + `build`      |

@@ -1,6 +1,7 @@
 import type { TemplateFile } from "../types";
 
-export function getWebAuthRouteTemplates(): TemplateFile[] {
+export function getWebAuthRouteTemplates(includeTodos = true): TemplateFile[] {
+  const postAuthRoute = includeTodos ? "/todos" : "/";
   return [
     {
       path: "apps/web/src/routes/login.tsx",
@@ -34,7 +35,7 @@ function LoginPage() {
       if (res.error) {
         setError(res.error.message || "Invalid email or password.");
       } else {
-        navigate({ to: "/todos" });
+        navigate({ to: "${postAuthRoute}" });
       }
     } catch {
       setError("Unable to sign in. Please try again.");
@@ -133,7 +134,7 @@ function RegisterPage() {
       if (res.error) {
         setError(res.error.message || "Registration failed.");
       } else {
-        navigate({ to: "/todos" });
+        navigate({ to: "${postAuthRoute}" });
       }
     } catch {
       setError("Unable to create account. Please try again.");

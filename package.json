@@ -1,8 +1,23 @@
 {
   "name": "best-stack",
   "version": "1.0.0",
-  "private": true,
+  "description": "BEST Stack (Bun · Elysia · Solid · Turbo) — Enterprise Type-Safe Modular Monorepo & AI Agent Skills Scaffolder",
+  "license": "MIT",
   "type": "module",
+  "keywords": [
+    "bun",
+    "elysia",
+    "solidjs",
+    "turborepo",
+    "drizzle-orm",
+    "better-auth",
+    "scaffolder",
+    "monorepo",
+    "ai-skills"
+  ],
+  "engines": {
+    "bun": ">=1.2.0"
+  },
   "bin": {
     "best-stack": "./src/index.ts",
     "best": "./src/index.ts"

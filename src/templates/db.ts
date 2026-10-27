@@ -1,7 +1,7 @@
 import type { TemplateFile } from "../types";
 import { getDbMigrationTemplates } from "./db-migrations";
 
-export function getDbTemplates(): TemplateFile[] {
+export function getDbTemplates(includeTodos = true): TemplateFile[] {
   return [
     {
       path: "packages/db/package.json",
@@ -16,6 +16,8 @@ export function getDbTemplates(): TemplateFile[] {
             typecheck: "tsc --noEmit",
             "db:generate": "bun --env-file=../../.env run --bun drizzle-kit generate",
             "db:migrate": "bun --env-file=../../.env run src/migrate.ts",
+            "db:push": "bun --env-file=../../.env run --bun drizzle-kit push",
+            "db:studio": "bun --env-file=../../.env run --bun drizzle-kit studio",
             "db:seed": "bun --env-file=../../.env run src/seeds/dev-seed.ts",
           },
           dependencies: {
@@ -58,10 +60,10 @@ export default defineConfig({
 });
 `,
     },
-    ...getDbMigrationTemplates(),
+    ...getDbMigrationTemplates(includeTodos),
     {
       path: "packages/db/src/schema/auth.ts",
-      content: `import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+      content: `import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -74,69 +76,88 @@ export const user = pgTable("user", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const session = pgTable("session", {
-  id: text("id").primaryKey(),
-  expiresAt: timestamp("expires_at").notNull(),
-  token: text("token").notNull().unique(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-});
+export const session = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at").notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("session_user_id_idx").on(table.userId)],
+);
 
-export const account = pgTable("account", {
-  id: text("id").primaryKey(),
-  accountId: text("account_id").notNull(),
-  providerId: text("provider_id").notNull(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  accessToken: text("access_token"),
-  refreshToken: text("refresh_token"),
-  idToken: text("id_token"),
-  accessTokenExpiresAt: timestamp("access_token_expires_at"),
-  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-  scope: text("scope"),
-  password: text("password"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const account = pgTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("account_user_id_idx").on(table.userId)],
+);
 
-export const verification = pgTable("verification", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const verification = pgTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("verification_identifier_idx").on(table.identifier)],
+);
 `,
     },
-    {
-      path: "packages/db/src/schema/todos.ts",
-      content: `import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+    ...(includeTodos
+      ? [
+          {
+            path: "packages/db/src/schema/todos.ts",
+            content: `import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
-export const todos = pgTable("todos", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  completed: boolean("completed").notNull().default(false),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const todos = pgTable(
+  "todos",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    completed: boolean("completed").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("todos_user_id_idx").on(table.userId)],
+);
 `,
-    },
+          },
+        ]
+      : []),
     {
       path: "packages/db/src/schema/index.ts",
       content: `export * from "./auth";
-export * from "./todos";
-`,
+${includeTodos ? 'export * from "./todos";\n' : ""}`,
     },
     {
       path: "packages/db/src/client.ts",
@@ -150,6 +171,7 @@ const connectionString =
 export const sqlClient = postgres(connectionString, {
   max: 20,
   idle_timeout: 30,
+  onnotice: () => {},
 });
 
 export const db = drizzle(sqlClient, { schema });
@@ -157,10 +179,8 @@ export const db = drizzle(sqlClient, { schema });
     },
     {
       path: "packages/db/src/migrate.ts",
-      content: `import { existsSync } from "node:fs";
-import { join } from "node:path";
+      content: `import { join } from "node:path";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { ensureCoreTables } from "./bootstrap-sql";
 import { db, sqlClient } from "./client";
 
 async function ensurePostgresReady(): Promise<void> {
@@ -190,18 +210,8 @@ async function ensurePostgresReady(): Promise<void> {
 
 export async function runMigrations(): Promise<void> {
   await ensurePostgresReady();
-  await ensureCoreTables();
-
   const migrationsFolder = join(import.meta.dir, "../drizzle");
-  const journalPath = join(migrationsFolder, "meta", "_journal.json");
-
-  if (existsSync(journalPath)) {
-    try {
-      await migrate(db, { migrationsFolder });
-    } catch {
-      // Tables already ensured via ensureCoreTables()
-    }
-  }
+  await migrate(db, { migrationsFolder });
 }
 
 if (import.meta.main) {
@@ -221,7 +231,7 @@ if (import.meta.main) {
       path: "packages/db/src/seeds/dev-seed.ts",
       content: `import { db, sqlClient } from "../client";
 import { runMigrations } from "../migrate";
-import { todos, user } from "../schema";
+import { ${includeTodos ? "todos, " : ""}user } from "../schema";
 
 async function seed() {
   await runMigrations();
@@ -236,7 +246,9 @@ async function seed() {
       role: "user",
     })
     .onConflictDoNothing();
-
+${
+  includeTodos
+    ? `
   await db
     .insert(todos)
     .values({
@@ -246,7 +258,9 @@ async function seed() {
       completed: false,
     })
     .onConflictDoNothing();
-
+`
+    : ""
+}
   console.log("Seed completed.");
 }
 

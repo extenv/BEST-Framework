@@ -56,7 +56,7 @@ export async function findAvailablePostgresPort(startPort = 5432): Promise<numbe
 }
 
 export async function generateProject(config: ScaffoldConfig): Promise<GenerateResult> {
-  const templates = getAllProjectTemplates();
+  const templates = getAllProjectTemplates(config.includeTodos ?? true);
   const filesWritten: string[] = [];
   const existingEnvPath = path.join(config.targetDir, ".env");
   let existingPort: number | undefined;

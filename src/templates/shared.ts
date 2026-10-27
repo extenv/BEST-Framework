@@ -1,6 +1,6 @@
 import type { TemplateFile } from "../types";
 
-export function getSharedTemplates(): TemplateFile[] {
+export function getSharedTemplates(includeTodos = true): TemplateFile[] {
   return [
     {
       path: "packages/shared/package.json",
@@ -97,16 +97,21 @@ export interface PaginatedResult<T> {
       content: `import { type Static, Type as t } from "@sinclair/typebox";
 
 export const HealthStatusSchema = t.Object({
-  status: t.Literal("ok"),
+  status: t.Union([t.Literal("ok"), t.Literal("degraded")]),
+  database: t.Union([t.Literal("connected"), t.Literal("disconnected")]),
+  dbLatencyMs: t.Number(),
+  uptimeSec: t.Integer(),
   timestamp: t.String(),
   environment: t.String(),
 });
 export type HealthStatus = Static<typeof HealthStatusSchema>;
 `,
     },
-    {
-      path: "packages/shared/src/dto/todos.ts",
-      content: `import { type Static, Type as t } from "@sinclair/typebox";
+    ...(includeTodos
+      ? [
+          {
+            path: "packages/shared/src/dto/todos.ts",
+            content: `import { type Static, Type as t } from "@sinclair/typebox";
 
 export const TodoItemSchema = t.Object({
   id: t.String(),
@@ -128,13 +133,14 @@ export const UpdateTodoSchema = t.Object({
 });
 export type UpdateTodoInput = Static<typeof UpdateTodoSchema>;
 `,
-    },
+          },
+        ]
+      : []),
     {
       path: "packages/shared/src/dto/index.ts",
       content: `export * from "./common";
 export * from "./system";
-export * from "./todos";
-`,
+${includeTodos ? 'export * from "./todos";\n' : ""}`,
     },
   ];
 }

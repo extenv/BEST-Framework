@@ -20,6 +20,7 @@ export function getApiCoreTemplates(): TemplateFile[] {
             "@<scope>/shared": "workspace:*",
             "@elysiajs/cors": "latest",
             "@elysiajs/static": "latest",
+            "@elysiajs/swagger": "latest",
             "@sinclair/typebox": "latest",
             "better-auth": "latest",
             "drizzle-orm": "latest",
@@ -100,6 +101,10 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { env } from "./env";
 
+const configuredOrigins = env.CORS_ALLOWED_ORIGINS.split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -107,7 +112,27 @@ export const auth = betterAuth({
   }),
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
-  trustedOrigins: env.CORS_ALLOWED_ORIGINS.split(",").map((origin) => origin.trim()),
+  trustedOrigins: (request) => {
+    if (env.APP_ENV !== "production") {
+      const rawOrigin = request?.headers.get("origin") || request?.headers.get("referer");
+      let requestOrigin: string | undefined;
+      if (rawOrigin) {
+        try {
+          requestOrigin = new URL(rawOrigin).origin;
+        } catch {
+          requestOrigin = undefined;
+        }
+      }
+      return [
+        ...configuredOrigins,
+        env.BETTER_AUTH_URL,
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        ...(requestOrigin ? [requestOrigin] : []),
+      ];
+    }
+    return [...configuredOrigins, env.BETTER_AUTH_URL];
+  },
   logger: {
     level: "error",
   },

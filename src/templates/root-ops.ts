@@ -85,6 +85,11 @@ export function getRootOpsTemplates(): TemplateFile[] {
       ENABLE_RESET_API: "false"
     ports:
       - "3001:3001"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
@@ -122,6 +127,7 @@ COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 COPY --from=builder /app/apps/web/dist ./apps/web/dist
 
+USER bun
 EXPOSE 3001
 CMD ["bun", "run", "apps/api/src/index.ts"]
 `,

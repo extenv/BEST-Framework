@@ -27,6 +27,8 @@ export function getRootTemplates(): TemplateFile[] {
             "test:e2e": "playwright test",
             "db:generate": "bun --filter @<scope>/db db:generate",
             "db:migrate": "bun --filter @<scope>/db db:migrate",
+            "db:push": "bun --filter @<scope>/db db:push",
+            "db:studio": "bun --filter @<scope>/db db:studio",
             "db:seed": "bun --filter @<scope>/db db:seed",
             "docker:db": "docker compose up -d postgres",
             "docker:up": "docker compose up --build -d",

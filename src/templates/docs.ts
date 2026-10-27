@@ -23,8 +23,10 @@ export function getDocsTemplates(): TemplateFile[] {
 
 Supporting core layers:
 - **Authentication:** \`better-auth\` with PostgreSQL Drizzle adapter (\`/api/auth/*\`) and \`authGuard\` macros (\`requireAuth\`, \`requireRole\`).
-- **Database:** PostgreSQL + \`drizzle-orm\` + \`drizzle-kit\` in \`@<scope>/db\`.
-- **Validation:** \`@sinclair/typebox\` schemas shared between backend and frontend via \`@<scope>/shared\`.
+- **OpenAPI / Scalar UI:** \`@elysiajs/swagger\` available at \`http://localhost:3001/docs\`.
+- **Observability & Protection:** Structured logger (\`apps/api/src/lib/logger.ts\`), \`x-request-id\` tracing, security headers, and rate limiting (\`apps/api/src/middleware/security.ts\`).
+- **Database:** PostgreSQL + \`drizzle-orm\` + \`drizzle-kit\` in \`@<scope>/db\` (with \`0000_init.sql\` & \`0000_snapshot.json\`).
+- **Validation & CI:** \`@sinclair/typebox\` schemas in \`@<scope>/shared\` and GitHub Actions CI (\`.github/workflows/ci.yml\`).
 
 ---
 

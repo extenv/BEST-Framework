@@ -1,74 +1,34 @@
 import type { TemplateFile } from "../types";
 
-export function getApiModuleTemplates(): TemplateFile[] {
-  return [
-    {
-      path: "apps/api/src/modules/system/index.ts",
-      content: `import { Elysia } from "elysia";
-import { env } from "../../lib/env";
-import { ForbiddenError } from "../../middleware/error-handler";
-
-export const systemModule = new Elysia()
-  .get("/health", () => ({
-    success: true,
-    data: {
-      status: "ok" as const,
-      timestamp: new Date().toISOString(),
-      environment: env.APP_ENV,
-    },
-  }))
-  .post("/admin/reset-state", ({ request }) => {
-    if (!env.ENABLE_RESET_API) {
-      throw new ForbiddenError("State reset API is disabled in this environment.");
-    }
-    const apiKey = request.headers.get("x-reset-api-key");
-    if (apiKey !== env.RESET_API_KEY) {
-      throw new ForbiddenError("Invalid reset API key.");
-    }
-    return {
-      success: true,
-      data: { reset: true, timestamp: new Date().toISOString() },
-    };
-  });
-`,
-    },
-    {
-      path: "apps/api/src/modules/system/system.test.ts",
-      content: `import { describe, expect, it } from "bun:test";
-import { systemModule } from "./index";
-
-describe("systemModule", () => {
-  it("returns 200 ok on /health", async () => {
-    const res = await systemModule.handle(new Request("http://localhost/health"));
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { success: boolean; data: { status: string } };
-    expect(body.success).toBe(true);
-    expect(body.data.status).toBe("ok");
-  });
-});
-`,
-    },
-    {
-      path: "apps/api/src/modules/todos/index.ts",
-      content: `import { CreateTodoSchema, UpdateTodoSchema } from "@<scope>/shared";
+export function getApiModuleTemplates(includeTodos = true): TemplateFile[] {
+  const todosTemplates: TemplateFile[] = includeTodos
+    ? [
+        {
+          path: "apps/api/src/modules/todos/index.ts",
+          content: `import { CreateTodoSchema, UpdateTodoSchema } from "@<scope>/shared";
 import { Elysia, t } from "elysia";
 import { authGuard } from "../../middleware/auth";
+import { AuthError } from "../../middleware/error-handler";
 import { todosService } from "./service";
 
 export const todosModule = new Elysia({ prefix: "/api/todos" })
   .use(authGuard)
   .get(
     "/",
-    async ({ user }) => ({
-      success: true,
-      data: await todosService.listByUser(user!.id),
-    }),
+    async ({ user }) => {
+      if (!user) throw new AuthError();
+      return {
+        success: true,
+        data: await todosService.listByUser(user.id),
+      };
+    },
     { requireAuth: true },
   )
   .post(
     "/",
     async ({ body, user, set }) => {
-      const todo = await todosService.create(user!.id, body);
+      if (!user) throw new AuthError();
+      const todo = await todosService.create(user.id, body);
       set.status = 201;
       return {
         success: true,
@@ -82,10 +42,13 @@ export const todosModule = new Elysia({ prefix: "/api/todos" })
   )
   .patch(
     "/:id",
-    async ({ params, body, user }) => ({
-      success: true,
-      data: await todosService.update(user!.id, params.id, body),
-    }),
+    async ({ params, body, user }) => {
+      if (!user) throw new AuthError();
+      return {
+        success: true,
+        data: await todosService.update(user.id, params.id, body),
+      };
+    },
     {
       requireAuth: true,
       params: t.Object({ id: t.String() }),
@@ -94,23 +57,26 @@ export const todosModule = new Elysia({ prefix: "/api/todos" })
   )
   .delete(
     "/:id",
-    async ({ params, user }) => ({
-      success: true,
-      data: await todosService.remove(user!.id, params.id),
-    }),
+    async ({ params, user }) => {
+      if (!user) throw new AuthError();
+      return {
+        success: true,
+        data: await todosService.remove(user.id, params.id),
+      };
+    },
     {
       requireAuth: true,
       params: t.Object({ id: t.String() }),
     },
   );
 `,
-    },
-    {
-      path: "apps/api/src/modules/todos/service.ts",
-      content: `import { db, todos } from "@<scope>/db";
+        },
+        {
+          path: "apps/api/src/modules/todos/service.ts",
+          content: `import { db, todos } from "@<scope>/db";
 import type { CreateTodoInput, TodoItem, UpdateTodoInput } from "@<scope>/shared";
 import { and, desc, eq } from "drizzle-orm";
-import { NotFoundError } from "../../middleware/error-handler";
+import { AppError, NotFoundError } from "../../middleware/error-handler";
 
 export const todosService = {
   async listByUser(userId: string): Promise<TodoItem[]> {
@@ -141,12 +107,16 @@ export const todosService = {
       })
       .returning();
 
+    if (!created) {
+      throw new AppError("CREATE_FAILED", "Failed to create todo item.", 500);
+    }
+
     return {
-      id: created!.id,
-      userId: created!.userId,
-      title: created!.title,
-      completed: created!.completed,
-      createdAt: created!.createdAt.toISOString(),
+      id: created.id,
+      userId: created.userId,
+      title: created.title,
+      completed: created.completed,
+      createdAt: created.createdAt.toISOString(),
     };
   },
 
@@ -188,10 +158,10 @@ export const todosService = {
   },
 };
 `,
-    },
-    {
-      path: "apps/api/src/modules/todos/service.test.ts",
-      content: `import { describe, expect, it } from "bun:test";
+        },
+        {
+          path: "apps/api/src/modules/todos/service.test.ts",
+          content: `import { describe, expect, it } from "bun:test";
 import { NotFoundError } from "../../middleware/error-handler";
 
 describe("todos module error contract", () => {
@@ -202,7 +172,12 @@ describe("todos module error contract", () => {
   });
 });
 `,
-    },
+        },
+      ]
+    : [];
+
+  return [
+    ...todosTemplates,
     {
       path: "apps/api/src/index.ts",
       content: `import fs from "node:fs";
@@ -210,57 +185,79 @@ import path from "node:path";
 import { runMigrations, sqlClient } from "@<scope>/db";
 import { cors } from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
+import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { auth } from "./lib/auth";
 import { env } from "./lib/env";
+import { logger } from "./lib/logger";
 import { authGuard } from "./middleware/auth";
 import { AppError, NotFoundError } from "./middleware/error-handler";
+import { securityPlugin } from "./middleware/security";
 import { systemModule } from "./modules/system";
-import { todosModule } from "./modules/todos";
-
+${includeTodos ? 'import { todosModule } from "./modules/todos";\n' : ""}
 const webDistPath = path.resolve(import.meta.dir, "../../web/dist");
 const hasWebDist = fs.existsSync(webDistPath);
 
 export const app = new Elysia()
   .use(
     cors({
-      origin: env.CORS_ALLOWED_ORIGINS.split(",").map((origin) => origin.trim()),
+      origin:
+        env.APP_ENV === "production"
+          ? env.CORS_ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+          : true,
       credentials: true,
-      allowedHeaders: ["Content-Type", "Authorization"],
+      allowedHeaders: ["Content-Type", "Authorization", "x-request-id"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     }),
   )
-  .onError(({ code, error, set }) => {
+  .use(securityPlugin)
+  .use(
+    swagger({
+      path: "/docs",
+      documentation: {
+        info: {
+          title: "<project-slug> API",
+          version: "1.0.0",
+          description: "BEST Stack Type-Safe Modular Monolith API Documentation",
+        },
+      },
+    }),
+  )
+  .onError(({ code, error, set, request }) => {
+    const requestId = set.headers["x-request-id"];
     if (error instanceof AppError) {
       set.status = error.statusCode;
       return {
         success: false,
-        error: { code: error.code, message: error.message, details: error.details },
+        error: { code: error.code, message: error.message, details: error.details, requestId },
       };
     }
     if (code === "NOT_FOUND") {
       set.status = 404;
-      return { success: false, error: { code: "NOT_FOUND", message: "Route not found." } };
+      return { success: false, error: { code: "NOT_FOUND", message: "Route not found.", requestId } };
     }
     if (code === "VALIDATION") {
       set.status = 422;
       return {
         success: false,
-        error: { code: "VALIDATION_ERROR", message: "Validation failed.", details: error.all },
+        error: { code: "VALIDATION_ERROR", message: "Validation failed.", details: error.all, requestId },
       };
     }
     if (code === "PARSE") {
       set.status = 400;
-      return { success: false, error: { code: "INVALID_JSON", message: "Malformed JSON body." } };
+      return { success: false, error: { code: "INVALID_JSON", message: "Malformed JSON body.", requestId } };
     }
-    console.error("Unhandled API Error:", error);
+    logger.error("Unhandled API Error", {
+      requestId,
+      path: new URL(request.url).pathname,
+      error: error instanceof Error ? error.message : String(error),
+    });
     set.status = 500;
-    return { success: false, error: { code: "INTERNAL_ERROR", message: "Internal server error." } };
+    return { success: false, error: { code: "INTERNAL_ERROR", message: "Internal server error.", requestId } };
   })
   .mount(auth.handler)
   .use(systemModule)
-  .use(authGuard)
-  .use(todosModule);
+  .use(authGuard)${includeTodos ? "\n  .use(todosModule)" : ""};
 
 if (hasWebDist) {
   app.use(staticPlugin({ assets: webDistPath, prefix: "/" }));
@@ -278,10 +275,10 @@ if (import.meta.main) {
   await runMigrations();
 
   app.listen(env.PORT);
-  console.log(\`Server listening at http://localhost:\${env.PORT}\`);
+  logger.info(\`Server listening at http://localhost:\${env.PORT} (OpenAPI docs: http://localhost:\${env.PORT}/docs)\`);
 
   const shutdown = async (signal: string) => {
-    console.log(\`Received \${signal}. Closing HTTP server and DB pool...\`);
+    logger.info(\`Received \${signal}. Closing HTTP server and DB pool...\`);
     await app.stop();
     await sqlClient.end({ timeout: 5 });
     process.exit(0);

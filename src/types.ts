@@ -21,6 +21,7 @@ export interface ScaffoldConfig {
   scope: string; // without leading '@', e.g. 'acme' -> '@acme'
   targetDir: string;
   roles: SkillRole[];
+  includeTodos?: boolean;
   installSkills: boolean;
   fetchExternalSkills: boolean;
   installDeps: boolean;

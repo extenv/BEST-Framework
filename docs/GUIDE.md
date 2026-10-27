@@ -17,9 +17,11 @@
 
 Integrated core infrastructure:
 - **Authentication:** `better-auth` with Drizzle PostgreSQL adapter (`apps/api/src/lib/auth.ts`) and SolidJS reactive client (`better-auth/solid`).
-- **Database & ORM:** PostgreSQL + `drizzle-orm` + `drizzle-kit` (`packages/db`).
+- **Interactive OpenAPI Documentation:** `@elysiajs/swagger` mounted at `http://localhost:3001/docs` (Scalar UI).
+- **Observability & Security:** Structured logger (`apps/api/src/lib/logger.ts`), `x-request-id` tracing, security headers, and sliding-window rate limiter (`apps/api/src/middleware/security.ts`).
+- **Database & ORM:** PostgreSQL + `drizzle-orm` + `drizzle-kit` (`packages/db`) with initial SQL migration (`0000_init.sql`) and Drizzle v7 snapshot (`0000_snapshot.json`).
 - **Shared Validation:** `@sinclair/typebox` DTO schemas & static TypeScript types (`packages/shared`).
-- **Code Quality & Testing:** Biome (`@biomejs/biome`), Husky + `lint-staged`, `bun:test`, and Playwright (`@playwright/test`).
+- **Code Quality & CI/CD:** Biome (`@biomejs/biome`), Husky + `lint-staged`, `bun:test`, Playwright, and GitHub Actions workflow (`.github/workflows/ci.yml`).
 - **AI Agent Skills:** 53 curated `SKILL.md` workflows across 9 SDLC roles pre-installed in `.agents/skills/`.
 
 ---

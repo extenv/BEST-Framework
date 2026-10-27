@@ -33,6 +33,7 @@ describe("best-stack CLI parser & project generator", () => {
       "@bs",
       "--roles",
       "be,fe,general",
+      "--no-todos",
       "--offline-skills",
       "--no-install",
       "-y",
@@ -40,6 +41,7 @@ describe("best-stack CLI parser & project generator", () => {
     expect(parsed.projectSlug).toBe("best-stack");
     expect(parsed.scope).toBe("bs");
     expect(parsed.roles).toEqual(["be", "fe", "general"]);
+    expect(parsed.includeTodos).toBe(false);
     expect(parsed.fetchExternalSkills).toBe(false);
     expect(parsed.installDeps).toBe(false);
     expect(parsed.yes).toBe(true);
@@ -73,18 +75,93 @@ describe("best-stack CLI parser & project generator", () => {
     );
     expect(envExample).toContain("BETTER_AUTH_SECRET=bf_dev_secret_9x8k2m4p7q1w3e5r6t8y0u2i4o6p8a1s3d5f");
 
-    // Check idempotent SQL bootstrap and auto-migration on API startup
-    expect(existsSync(path.join(targetDir, "packages/db/src/bootstrap-sql.ts"))).toBe(true);
+    // Check clean single-source Drizzle migration, snapshot, and silent notices on postgres client
+    expect(existsSync(path.join(targetDir, "packages/db/drizzle/0000_init.sql"))).toBe(true);
+    expect(existsSync(path.join(targetDir, "packages/db/drizzle/meta/_journal.json"))).toBe(true);
+    expect(existsSync(path.join(targetDir, "packages/db/drizzle/meta/0000_snapshot.json"))).toBe(true);
+    expect(existsSync(path.join(targetDir, "packages/db/src/bootstrap-sql.ts"))).toBe(false);
+
+    const dbClient = await Bun.file(path.join(targetDir, "packages/db/src/client.ts")).text();
+    expect(dbClient).toContain("onnotice: () => {}");
+
+    // Check OpenAPI swagger, structured logger, security/rate-limit middleware, and CI workflow
+    expect(existsSync(path.join(targetDir, "apps/api/src/lib/logger.ts"))).toBe(true);
+    expect(existsSync(path.join(targetDir, "apps/api/src/middleware/security.ts"))).toBe(true);
+    expect(existsSync(path.join(targetDir, ".github/workflows/ci.yml"))).toBe(true);
+
     const apiIndex = await Bun.file(path.join(targetDir, "apps/api/src/index.ts")).text();
     expect(apiIndex).toContain("await runMigrations();");
+    expect(apiIndex).toContain("swagger(");
+    expect(apiIndex).toContain(".use(securityPlugin)");
 
-    // Check docker-compose.yml has PGDATA for Postgres 18+
-    const dockerCompose = await Bun.file(path.join(targetDir, "docker-compose.yml")).text();
-    expect(dockerCompose).toContain("PGDATA: /var/lib/postgresql/data/pgdata");
-
-    // Check API package.json zero-warning watch script & drizzle-orm dependency
+    // Check API package.json zero-warning watch script & dependencies
     const apiPkg = await Bun.file(path.join(targetDir, "apps/api/package.json")).json();
     expect(apiPkg.scripts.dev).toBe("cd ../.. && bun --env-file=.env --watch apps/api/src/index.ts");
     expect(apiPkg.dependencies["drizzle-orm"]).toBe("latest");
+    expect(apiPkg.dependencies["@elysiajs/swagger"]).toBe("latest");
+
+    // Check root package.json includes db:studio and db:push
+    const rootPkg = await Bun.file(path.join(targetDir, "package.json")).json();
+    expect(rootPkg.scripts["db:studio"]).toBeDefined();
+    expect(rootPkg.scripts["db:push"]).toBeDefined();
+
+    // Check web __root.tsx includes notFoundComponent and errorComponent
+    const rootRouteTsx = await Bun.file(
+      path.join(targetDir, "apps/web/src/routes/__root.tsx"),
+    ).text();
+    expect(rootRouteTsx).toContain("notFoundComponent");
+    expect(rootRouteTsx).toContain("errorComponent");
+
+    // Check docker-compose.yml includes app healthcheck & PGDATA, and Dockerfile runs as non-root USER bun
+    const dockerCompose = await Bun.file(path.join(targetDir, "docker-compose.yml")).text();
+    expect(dockerCompose).toContain("PGDATA: /var/lib/postgresql/data/pgdata");
+    expect(dockerCompose).toContain("http://localhost:3001/health");
+
+    const dockerfile = await Bun.file(path.join(targetDir, "Dockerfile")).text();
+    expect(dockerfile).toContain("USER bun");
+
+    // Check PostgreSQL B-Tree indexes on foreign keys and bounded rate-limiter + HTTP access audit logging
+    const initSql = await Bun.file(
+      path.join(targetDir, "packages/db/drizzle/0000_init.sql"),
+    ).text();
+    expect(initSql).toContain("session_user_id_idx");
+    expect(initSql).toContain("todos_user_id_idx");
+
+    const securityTs = await Bun.file(
+      path.join(targetDir, "apps/api/src/middleware/security.ts"),
+    ).text();
+    expect(securityTs).toContain("pruneExpiredBuckets");
+    expect(securityTs).toContain("onAfterResponse");
+  });
+
+  it("omits all todos files, schemas, routes, and migrations when includeTodos is false", async () => {
+    const cleanDir = path.join(tempRoot, "best-stack-clean");
+    await generateProject({
+      projectSlug: "best-stack-clean",
+      scope: "bs",
+      targetDir: cleanDir,
+      roles: ["be", "fe"],
+      includeTodos: false,
+      installSkills: false,
+      fetchExternalSkills: false,
+      installDeps: false,
+      overwrite: true,
+    });
+
+    expect(existsSync(path.join(cleanDir, "packages/shared/src/dto/todos.ts"))).toBe(false);
+    expect(existsSync(path.join(cleanDir, "packages/db/src/schema/todos.ts"))).toBe(false);
+    expect(existsSync(path.join(cleanDir, "apps/api/src/modules/todos/index.ts"))).toBe(false);
+    expect(existsSync(path.join(cleanDir, "apps/web/src/routes/todos.tsx"))).toBe(false);
+
+    const initSql = await Bun.file(
+      path.join(cleanDir, "packages/db/drizzle/0000_init.sql"),
+    ).text();
+    expect(initSql).not.toContain('"todos"');
+
+    const apiIndex = await Bun.file(path.join(cleanDir, "apps/api/src/index.ts")).text();
+    expect(apiIndex).not.toContain("todosModule");
+
+    const routerTs = await Bun.file(path.join(cleanDir, "apps/web/src/router.ts")).text();
+    expect(routerTs).not.toContain("todosRoute");
   });
 });

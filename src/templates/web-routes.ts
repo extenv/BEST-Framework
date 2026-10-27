@@ -2,11 +2,11 @@ import type { TemplateFile } from "../types";
 import { getWebAuthRouteTemplates } from "./web-auth";
 import { getWebTodosRouteTemplate } from "./web-todos";
 
-export function getWebRouteTemplates(): TemplateFile[] {
+export function getWebRouteTemplates(includeTodos = true): TemplateFile[] {
   return [
     {
       path: "apps/web/src/routes/__root.tsx",
-      content: `import { createRootRoute, Outlet } from "@tanstack/solid-router";
+      content: `import { createRootRoute, Link, Outlet } from "@tanstack/solid-router";
 import { Navbar } from "../components/layout/Navbar";
 
 export const rootRoute = createRootRoute({
@@ -16,6 +16,38 @@ export const rootRoute = createRootRoute({
       <main class="mx-auto max-w-4xl px-6 py-10">
         <Outlet />
       </main>
+    </div>
+  ),
+  notFoundComponent: () => (
+    <div class="mx-auto max-w-md py-16 text-center space-y-4">
+      <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Error 404</p>
+      <h1 class="text-xl font-semibold text-slate-900">Page not found</h1>
+      <p class="text-sm text-slate-500">The page you are looking for does not exist or has been moved.</p>
+      <div class="pt-2">
+        <Link
+          to="/"
+          class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+        >
+          Back to Overview
+        </Link>
+      </div>
+    </div>
+  ),
+  errorComponent: (props) => (
+    <div class="mx-auto max-w-md py-16 text-center space-y-4">
+      <p class="text-xs font-semibold uppercase tracking-widest text-red-600">Application Error</p>
+      <h1 class="text-xl font-semibold text-slate-900">Something went wrong</h1>
+      <p class="text-sm text-slate-500">
+        {props.error instanceof Error ? props.error.message : "An unexpected error occurred."}
+      </p>
+      <div class="pt-2">
+        <Link
+          to="/"
+          class="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        >
+          Return Home
+        </Link>
+      </div>
     </div>
   ),
 });
@@ -70,12 +102,16 @@ function HomePage() {
               </>
             }
           >
-            <Link
+            ${
+              includeTodos
+                ? `<Link
               to="/todos"
               class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
             >
               Open Tasks
-            </Link>
+            </Link>`
+                : `<p class="text-sm font-medium text-emerald-700">Authenticated session active.</p>`
+            }
           </Show>
         </div>
       </div>
@@ -84,8 +120,8 @@ function HomePage() {
 }
 `,
     },
-    ...getWebAuthRouteTemplates(),
-    getWebTodosRouteTemplate(),
+    ...getWebAuthRouteTemplates(includeTodos),
+    ...(includeTodos ? [getWebTodosRouteTemplate()] : []),
     {
       path: "apps/web/src/router.ts",
       content: `import { createRouter } from "@tanstack/solid-router";
@@ -93,9 +129,8 @@ import { rootRoute } from "./routes/__root";
 import { indexRoute } from "./routes/index";
 import { loginRoute } from "./routes/login";
 import { registerRoute } from "./routes/register";
-import { todosRoute } from "./routes/todos";
-
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute, registerRoute, todosRoute]);
+${includeTodos ? 'import { todosRoute } from "./routes/todos";\n' : ""}
+const routeTree = rootRoute.addChildren([indexRoute, loginRoute, registerRoute${includeTodos ? ", todosRoute" : ""}]);
 
 export const router = createRouter({
   routeTree,
